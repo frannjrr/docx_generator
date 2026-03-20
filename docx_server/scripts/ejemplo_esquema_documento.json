@@ -1,0 +1,125 @@
+{
+  "_comentario": "Esquema de referencia para el agente. Todos los campos son opcionales salvo 'secciones'.",
+
+  "titulo": "Título del documento",
+  "empresa": "Mi Empresa S.L.",
+  "header_texto": "Texto del encabezado de página",
+
+  "color_primario":    "1B3A6B",
+  "color_secundario":  "2E75B6",
+  "color_acento":      "00B0F0",
+  "color_cabecera_bg": "1B3A6B",
+  "color_fila_par":    "EAF2FB",
+
+  "portada": {
+    "titulo":      "Informe de Estado del Router",
+    "subtitulo":   "Análisis completo de red y seguridad",
+    "autor":       "Administrador de Red",
+    "fecha":       "20 de marzo de 2026",
+    "version":     "1.0",
+    "descripcion": "Generado automáticamente por el Agente MikroTik"
+  },
+
+  "tabla_contenidos": true,
+
+  "secciones": [
+    {
+      "titulo": "1. Resumen Ejecutivo",
+      "bloques": [
+        { "tipo": "parrafo", "texto": "Este informe recoge el estado actual del router MikroTik." },
+        { "tipo": "alerta", "nivel": "info",  "texto": "ℹ️ Todos los sistemas operan con normalidad." },
+        { "tipo": "alerta", "nivel": "aviso", "texto": "⚠️ Se detectaron 3 reglas de firewall inactivas." },
+        { "tipo": "alerta", "nivel": "error", "texto": "🔴 El último backup tiene más de 7 días." },
+        { "tipo": "alerta", "nivel": "exito", "texto": "✅ Backup completado correctamente." }
+      ]
+    },
+    {
+      "titulo": "2. Interfaces de Red",
+      "bloques": [
+        { "tipo": "titulo2", "texto": "2.1 Estado de interfaces" },
+        {
+          "tipo": "tabla",
+          "columnas": ["Interfaz", "Tipo", "Estado", "MAC", "RX (bytes)", "TX (bytes)"],
+          "filas": [
+            ["ether1", "ether", "Activa", "AA:BB:CC:DD:EE:01", "1,234,567", "987,654"],
+            ["ether2", "ether", "Inactiva", "AA:BB:CC:DD:EE:02", "0", "0"],
+            ["wlan1",  "wlan",  "Activa", "AA:BB:CC:DD:EE:03", "5,678,901", "2,345,678"]
+          ]
+        },
+        { "tipo": "titulo2", "texto": "2.2 Notas" },
+        {
+          "tipo": "lista_bullets",
+          "items": [
+            "ether1 es la WAN principal con acceso a Internet.",
+            "ether2 se encuentra deshabilitada por mantenimiento.",
+            "wlan1 opera en la banda de 2.4 GHz."
+          ]
+        }
+      ]
+    },
+    {
+      "titulo": "3. Reglas de Firewall",
+      "bloques": [
+        {
+          "tipo": "tabla",
+          "columnas": ["ID", "Chain", "Acción", "Origen", "Puerto", "Estado", "Comentario"],
+          "filas": [
+            ["*1", "input",   "accept", "192.168.0.0/24", "",    "Activa",   "LAN local"],
+            ["*2", "input",   "drop",   "0.0.0.0/0",      "23",  "Activa",   "Bloquear Telnet"],
+            ["*3", "forward", "drop",   "10.0.0.5",       "",    "Inactiva", "IP sospechosa"]
+          ]
+        },
+        { "tipo": "separador" },
+        {
+          "tipo": "parrafo_rich",
+          "segmentos": [
+            { "texto": "Documentación oficial de firewall MikroTik: ", "negrita": false },
+            { "texto": "wiki.mikrotik.com/Firewall", "enlace": "https://wiki.mikrotik.com/wiki/Manual:IP/Firewall", "color": "2E75B6" }
+          ]
+        }
+      ]
+    },
+    {
+      "titulo": "4. Historial de Backups",
+      "bloques": [
+        {
+          "tipo": "tabla",
+          "columnas": ["Archivo", "Formato", "Tamaño", "Fecha", "Ruta"],
+          "filas": [
+            ["MikroTik_20260320_120000.rsc", ".rsc", "45 KB", "20/03/2026 12:00", "./output/backups/"],
+            ["MikroTik_20260313_080000.rsc", ".rsc", "44 KB", "13/03/2026 08:00", "./output/backups/"]
+          ]
+        },
+        {
+          "tipo": "lista_numerada",
+          "items": [
+            "Los backups .rsc son legibles y versionables en Git.",
+            "Los backups .backup son restaurables desde Winbox.",
+            "Se conservan los últimos 10 backups automáticamente."
+          ]
+        }
+      ]
+    },
+    {
+      "titulo": "5. Información del Sistema",
+      "bloques": [
+        { "tipo": "titulo2", "texto": "5.1 Hardware y Software" },
+        {
+          "tipo": "tabla",
+          "columnas": ["Parámetro", "Valor"],
+          "filas": [
+            ["Hostname",          "MikroTik-Principal"],
+            ["Modelo",            "RB4011iGS+5HacQ2HnD"],
+            ["Versión RouterOS",  "7.13.2"],
+            ["Número de serie",   "HEB123456789"],
+            ["Uptime",            "15d 04:32:11"],
+            ["CPU Load",          "12%"],
+            ["Memoria libre",     "128 MB / 512 MB"]
+          ]
+        },
+        { "tipo": "espacio", "altura": 400 },
+        { "tipo": "parrafo", "texto": "Fin del informe.", "alineacion": "centro", "color": "5A6A85", "cursiva": true }
+      ]
+    }
+  ]
+}
