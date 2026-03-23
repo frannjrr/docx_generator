@@ -1,22 +1,50 @@
-# Generador DOCX — Servidor HTTP para N8N / Agentes IA
+# docx_generator
 
-Servidor FastAPI que genera documentos `.docx` profesionales a partir de JSON.
-Expuesto como HTTP para consumirse desde **N8N**, Make, o cualquier agente IA.
+Servidor HTTP para generar documentos `.docx` profesionales a partir de un JSON.  
+Pensado para integrarse con **N8N**, agentes IA, o cualquier sistema que haga peticiones HTTP.
+
+**Stack:** Python · FastAPI · Node.js · [docx](https://docx.js.org/)
 
 ---
 
-## Instalación (una sola vez)
+## Estructura
+
+```
+docx_generator/
+├── scripts/
+│   └── generar_docx.js      # Motor de generación (Node.js + librería docx)
+├── docx_server.py           # Servidor FastAPI
+├── requirements.txt         # Dependencias Python
+├── .env.example             # Plantilla de variables de entorno
+└── README.md
+```
+
+---
+
+## Requisitos
+
+- Python 3.10+
+- Node.js 18+
+- npm
+
+---
+
+## Instalación
 
 ```bash
-# 1. Entrar a la carpeta
-cd docx-server
+# 1. Clonar el repositorio
+git clone https://github.com/frannjrr/docx_generator.git
+cd docx_generator
 
 # 2. Instalar dependencias Python
 pip install -r requirements.txt
 
-# 3. Verificar que Node.js está instalado (>=18)
-node --version
-npm install -g docx   # si no lo tienes ya
+# 3. Instalar librería Node.js para generar .docx
+npm install -g docx
+
+# 4. Configurar variables de entorno
+cp .env.example .env
+# Edita .env si necesitas cambiar puerto o rutas
 ```
 
 ---
@@ -27,12 +55,13 @@ npm install -g docx   # si no lo tienes ya
 python docx_server.py
 ```
 
-O con uvicorn directamente (para producción):
-```bash
-uvicorn docx_server:app --host 0.0.0.0 --port 8100
-```
+El servidor arranca en `http://localhost:8100`
 
-El servidor arranca en: **http://localhost:8100**
+| URL | Descripción |
+|-----|-------------|
+| `http://localhost:8100/docs` | Swagger UI — prueba los endpoints aquí |
+| `http://localhost:8100/health` | Healthcheck |
+| `http://localhost:8100/esquema` | JSON de referencia para construir documentos |
 
 ---
 
@@ -40,66 +69,58 @@ El servidor arranca en: **http://localhost:8100**
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| `GET`  | `/health` | Healthcheck |
-| `GET`  | `/docs` | Swagger UI interactivo |
-| `GET`  | `/esquema` | JSON de referencia para construir documentos |
-| `POST` | `/generar` | **Genera un `.docx`** |
-| `GET`  | `/descargar/{nombre}` | Descarga directa del archivo |
-| `GET`  | `/documentos` | Lista documentos generados |
+| `POST` | `/generar` | Genera un `.docx` |
+| `GET` | `/descargar/{nombre}` | Descarga directa del archivo |
+| `GET` | `/documentos` | Lista documentos generados |
 | `DELETE` | `/documentos/{nombre}` | Elimina un documento |
+| `GET` | `/health` | Estado del servidor |
+| `GET` | `/esquema` | Esquema JSON de referencia |
 
 ---
 
-## Uso desde N8N
+## Ejemplo de uso
 
-### Nodo HTTP Request — Generar documento
-
-```
-Método:      POST
-URL:         http://localhost:8100/generar
-Body Type:   JSON
-```
-
-**Body de ejemplo:**
-```json
-{
-  "especificacion": {
-    "titulo": "Informe Automático",
-    "empresa": "Mi Empresa S.L.",
-    "portada": {
-      "titulo": "Informe de Estado",
-      "subtitulo": "Generado por el agente IA",
-      "autor": "N8N Workflow",
-      "version": "1.0"
-    },
-    "tabla_contenidos": true,
-    "secciones": [
-      {
-        "titulo": "Resumen",
-        "bloques": [
-          { "tipo": "parrafo", "texto": "Este informe fue generado automáticamente." },
-          { "tipo": "alerta", "nivel": "info", "texto": "Todos los sistemas operan con normalidad." }
-        ]
+```bash
+curl -X POST http://localhost:8100/generar \
+  -H "Content-Type: application/json" \
+  -d '{
+    "especificacion": {
+      "titulo": "Informe de Prueba",
+      "empresa": "Mi Empresa S.L.",
+      "portada": {
+        "titulo": "Informe de Estado",
+        "subtitulo": "Generado automáticamente",
+        "autor": "Agente IA",
+        "version": "1.0"
       },
-      {
-        "titulo": "Datos",
-        "bloques": [
-          {
-            "tipo": "tabla",
-            "columnas": ["Campo", "Valor"],
-            "filas": [
-              ["Fecha", "20/03/2026"],
-              ["Estado", "OK"]
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  "nombre_archivo": "informe_estado",
-  "incluir_base64": true,
-  "incluir_url": true
-}
+      "tabla_contenidos": true,
+      "secciones": [
+        {
+          "titulo": "Resumen",
+          "bloques": [
+            { "tipo": "parrafo", "texto": "Todo operando con normalidad." },
+            { "tipo": "alerta", "nivel": "exito", "texto": "✅ Sistema OK" }
+          ]
+        },
+        {
+          "titulo": "Datos",
+          "bloques": [
+            {
+              "tipo": "tabla",
+              "columnas": ["Campo", "Valor"],
+              "filas": [
+                ["Fecha", "20/03/2026"],
+                ["Estado", "Activo"]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "nombre_archivo": "informe_prueba",
+    "incluir_base64": true,
+    "incluir_url": true
+  }'
 ```
 
 **Respuesta:**
@@ -107,94 +128,108 @@ Body Type:   JSON
 {
   "success": true,
   "id": "a3f9b2c1",
-  "nombre": "informe_estado_20260320_143022_a3f9b2c1.docx",
-  "url_descarga": "http://localhost:8100/descargar/informe_estado_20260320_143022_a3f9b2c1.docx",
+  "nombre": "informe_prueba_20260320_143022_a3f9b2c1.docx",
+  "url_descarga": "http://localhost:8100/descargar/informe_prueba_20260320_143022_a3f9b2c1.docx",
   "base64": "UEsDBBQABgAIAAAAIQB...",
   "tamaño_kb": 14.2,
   "timestamp": "20260320_143022"
 }
 ```
 
-### Nodo HTTP Request — Descargar archivo (binario)
+---
 
-```
-Método:         GET
-URL:            {{ $json.url_descarga }}
-Response Type:  File
-```
+## Bloques disponibles
+
+| Tipo | Descripción |
+|------|-------------|
+| `titulo1` / `titulo2` / `titulo3` | Títulos con jerarquía |
+| `parrafo` | Texto normal (soporta `negrita`, `cursiva`, `color`, `alineacion`) |
+| `parrafo_rich` | Texto con segmentos de formato mixto y enlaces |
+| `lista_bullets` | Lista con viñetas |
+| `lista_numerada` | Lista numerada |
+| `tabla` | Tabla con cabecera coloreada y filas alternas |
+| `alerta` | Bloque destacado: `info`, `exito`, `aviso`, `error` |
+| `separador` | Línea horizontal |
+| `salto_pagina` | Salto de página |
+| `espacio` | Espacio vertical |
 
 ---
 
-## Tipos de bloque disponibles
+## Integración con N8N
 
-| Tipo | Campos extra | Descripción |
-|------|-------------|-------------|
-| `titulo1` | `texto` | Título grande con línea inferior |
-| `titulo2` | `texto` | Subtítulo azul medio |
-| `titulo3` | `texto` | Subtítulo pequeño gris |
-| `parrafo` | `texto`, `negrita`, `cursiva`, `alineacion`, `color` | Párrafo normal |
-| `parrafo_rich` | `segmentos:[{texto,negrita,cursiva,color,enlace}]` | Párrafo con formato mixto y links |
-| `lista_bullets` | `items:[]`, `nivel` | Lista con viñetas |
-| `lista_numerada` | `items:[]` | Lista numerada |
-| `tabla` | `columnas:[]`, `filas:[[]]` | Tabla con cabecera coloreada y filas alternas |
-| `alerta` | `texto`, `nivel: info\|exito\|aviso\|error` | Bloque de alerta con color |
-| `separador` | — | Línea horizontal |
-| `salto_pagina` | — | Salto de página |
-| `espacio` | `altura` | Espacio vertical en DXA |
+Nodo **HTTP Request**:
+```
+Método:  POST
+URL:     http://localhost:8100/generar
+Body:    JSON con la especificación del documento
+```
 
----
-
-## Personalizar colores del tema
-
-En la `especificacion` puedes añadir (sin el `#`):
-
-```json
-{
-  "color_primario":    "1B3A6B",
-  "color_secundario":  "2E75B6",
-  "color_acento":      "00B0F0",
-  "color_cabecera_bg": "1B3A6B",
-  "color_fila_par":    "EAF2FB"
-}
+Para descargar el archivo resultante, usa un segundo nodo HTTP Request con:
+```
+Método:          GET
+URL:             {{ $json.url_descarga }}
+Response Format: File
 ```
 
 ---
 
-## Como servicio (systemd — Linux)
+## Variables de entorno
 
-```ini
-# /etc/systemd/system/docx-server.service
+Copia `.env.example` a `.env` y ajusta si necesitas:
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `DOCX_HOST` | `0.0.0.0` | IP donde escucha el servidor |
+| `DOCX_PORT` | `8100` | Puerto |
+| `DOCX_BASE_URL` | `http://localhost:8100` | URL base para links de descarga |
+| `DOCX_OUTPUT_DIR` | `./output/documentos` | Carpeta de salida |
+| `DOCX_SCRIPT_JS` | `./scripts/generar_docx.js` | Ruta al script Node.js |
+| `NODE_BIN` | `node` | Binario de Node.js |
+
+---
+
+## Como servicio permanente (Linux)
+
+```bash
+# /etc/systemd/system/docx-generator.service
 [Unit]
-Description=Generador DOCX HTTP Server
+Description=docx_generator HTTP Server
 After=network.target
 
 [Service]
 Type=simple
 User=tu_usuario
-WorkingDirectory=/ruta/a/docx-server
+WorkingDirectory=/ruta/a/docx_generator
 ExecStart=/usr/bin/python3 docx_server.py
 Restart=always
-RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 ```
 
 ```bash
-sudo systemctl enable docx-server
-sudo systemctl start docx-server
-sudo systemctl status docx-server
+sudo systemctl enable docx-generator
+sudo systemctl start docx-generator
 ```
 
 ---
 
-## Variables de entorno (.env)
+## .gitignore recomendado
 
-| Variable | Default | Descripción |
-|----------|---------|-------------|
-| `DOCX_HOST` | `0.0.0.0` | IP donde escucha el servidor |
-| `DOCX_PORT` | `8100` | Puerto |
-| `DOCX_BASE_URL` | `http://localhost:8100` | URL base para las URLs de descarga |
-| `DOCX_OUTPUT_DIR` | `./output/documentos` | Carpeta donde se guardan los .docx |
-| `DOCX_SCRIPT_JS` | `./scripts/generar_docx.js` | Ruta al script generador |
-| `NODE_BIN` | `node` | Binario de Node.js |
+```gitignore
+.env
+__pycache__/
+*.pyc
+venv/
+output/
+*.docx
+node_modules/
+.idea/
+.vscode/
+```
+
+---
+
+## Autor
+
+[frannjrr](https://github.com/frannjrr)
